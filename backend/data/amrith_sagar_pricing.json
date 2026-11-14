@@ -1,0 +1,123 @@
+{
+  "business": "Amrith Sagar Catering",
+  "currency": "INR",
+  "valid_for_event_year": 2026,
+  "notes": "Mock pricing for the voice-agent project. Prices are per plate (per guest), exclude GST and travel. Jain versions cost the same. Read by the calculate_quote tool; the LLM never computes prices itself. Area -> zone lookup lives in backend/data/areas.json.",
+  "gst": {
+    "included_in_prices": false,
+    "rate_percent": null,
+    "note": "Add GST at the current government rate for outdoor catering; set rate_percent before production use."
+  },
+  "packages": [
+    {"code": "SI-CLASSIC", "name": "South Indian Classic (veg)", "price_per_plate": 400, "min_guests": 50, "diet": "veg", "meal": "lunch_or_dinner"},
+    {"code": "SI-BALE", "name": "Bale Ele Oota, traditional wedding feast (veg)", "price_per_plate": 650, "min_guests": 100, "diet": "veg", "meal": "lunch_or_dinner"},
+    {"code": "SI-NV", "name": "South Indian Non-Veg", "price_per_plate": 600, "min_guests": 50, "diet": "non_veg", "meal": "lunch_or_dinner"},
+    {"code": "NI-VEG", "name": "North Indian Veg", "price_per_plate": 550, "min_guests": 50, "diet": "veg", "meal": "lunch_or_dinner"},
+    {"code": "NI-NV", "name": "North Indian Non-Veg", "price_per_plate": 750, "min_guests": 50, "diet": "non_veg", "meal": "lunch_or_dinner"},
+    {"code": "ROYAL-WED", "name": "Royal Wedding Multi-cuisine (veg)", "price_per_plate": 1100, "min_guests": 300, "diet": "veg", "meal": "lunch_or_dinner"},
+    {"code": "IT-CLASSIC", "name": "Italian", "price_per_plate": 850, "min_guests": 50, "diet": "veg", "meal": "lunch_or_dinner"},
+    {"code": "JP-CLASSIC", "name": "Japanese (veg)", "price_per_plate": 1400, "min_guests": 30, "diet": "veg", "meal": "lunch_or_dinner"},
+    {"code": "JP-CLASSIC-NV", "name": "Japanese (non-veg)", "price_per_plate": 1650, "min_guests": 30, "diet": "non_veg", "meal": "lunch_or_dinner"},
+    {"code": "BF-CLASSIC", "name": "Breakfast", "price_per_plate": 250, "min_guests": 50, "diet": "veg", "meal": "breakfast"},
+    {"code": "HIGH-TEA", "name": "High tea / evening snacks", "price_per_plate": 220, "min_guests": 50, "diet": "veg", "meal": "high_tea"},
+    {"code": "AFTER-PARTY", "name": "After-party late night", "price_per_plate": 450, "min_guests": 30, "diet": "veg", "meal": "after_party"},
+    {"code": "CORP-BOX", "name": "Corporate boxed meal", "price_per_plate": 300, "min_guests": 50, "diet": "veg_or_non_veg", "meal": "lunch_or_dinner"}
+  ],
+  "custom_menu": {
+    "min_guests": 50,
+    "min_dishes": 6,
+    "base_service_charge_per_plate": 120,
+    "items_per_plate": {
+      "welcome_drink": {"veg": 30},
+      "soup": {"veg": 40, "non_veg": 60},
+      "starter": {"veg": 60, "non_veg": 100},
+      "salad_or_palya": {"veg": 25},
+      "flavoured_rice_or_biryani": {"veg": 50, "non_veg": 120},
+      "plain_rice_sambar_rasam_set": {"veg": 40},
+      "bread": {"veg": 30},
+      "main_course_curry": {"veg": 60, "non_veg": 110},
+      "indian_sweet": {"veg": 40},
+      "world_dessert": {"veg": 80},
+      "japanese_item": {"veg": 150, "non_veg": 220},
+      "italian_pasta_or_pizza": {"veg": 80, "non_veg": 120}
+    }
+  },
+  "add_ons": [
+    {"code": "LIVE-DOSA", "name": "Live dosa counter", "unit": "per_plate", "price": 80},
+    {"code": "LIVE-CHAAT", "name": "Live chaat counter", "unit": "per_plate", "price": 70},
+    {"code": "LIVE-PASTA", "name": "Live pasta counter", "unit": "per_plate", "price": 90},
+    {"code": "LIVE-SUSHI", "name": "Live sushi counter", "unit": "per_plate", "price": 180},
+    {"code": "LIVE-SWEET", "name": "Live jalebi / waffle / crepe counter", "unit": "per_plate", "price": 60},
+    {"code": "ICE-CREAM", "name": "Ice-cream counter (4 flavours)", "unit": "per_plate", "price": 50},
+    {"code": "DESSERT-TABLE", "name": "World dessert table (6 desserts)", "unit": "per_plate", "price": 200},
+    {"code": "PAAN", "name": "Paan counter", "unit": "per_plate", "price": 25},
+    {"code": "PREMIUM-CROCKERY", "name": "Silver-finish premium crockery", "unit": "per_plate", "price": 40},
+    {"code": "EXTRA-SERVER", "name": "Extra server", "unit": "per_server", "price": 1200},
+    {"code": "RETURN-BOX", "name": "Boxed return meal for staff or drivers", "unit": "per_box", "price": 180},
+    {"code": "EXTRA-HOUR", "name": "Service extension beyond 3 hours", "unit": "per_hour", "price": 5000},
+    {"code": "MOCKTAIL-BAR", "name": "Mocktail bar", "unit": "per_guest", "price": 150},
+    {"code": "BAR-SETUP-200", "name": "Bar service setup up to 200 guests (host's liquor)", "unit": "per_event", "price": 25000},
+    {"code": "BAR-SETUP-500", "name": "Bar service setup up to 500 guests (host's liquor)", "unit": "per_event", "price": 40000},
+    {"code": "COCKTAIL-MENU", "name": "Signature cocktail menu (host's liquor)", "unit": "per_guest", "price": 80},
+    {"code": "BAR-SNACKS", "name": "Bar snacks", "unit": "per_guest", "price": 200},
+    {"code": "HOT-BEVERAGES", "name": "Hot beverages counter", "unit": "per_guest", "price": 40}
+  ],
+  "children": {
+    "free_below_age": 5,
+    "discounted_age_range": [5, 12],
+    "discounted_rate_percent_of_plate": 60
+  },
+  "volume_discounts": [
+    {"min_guests": 500, "max_guests": 999, "discount_percent": 5},
+    {"min_guests": 1000, "max_guests": null, "discount_percent": 8}
+  ],
+  "volume_discount_applies_to": "package or custom per-plate food price only (not add-ons, bar or travel)",
+  "quote_rules": {
+    "paying_guests": "adults + children_5_12. Children under 5 are free and not counted anywhere in pricing.",
+    "min_guests_check": "paying_guests >= package (or custom menu / zone) min_guests; otherwise ok=false with an error the agent reads out.",
+    "volume_discount_slab": "chosen by paying_guests; min_guests inclusive (500 -> 5%, 1000 -> 8%).",
+    "zone3_above_500": "strictly more than 500 paying_guests (501+) -> travel_charge_above_500_guests.",
+    "food_total": "adults x plate + children_5_12 x plate x 60%, then volume discount on that food_total.",
+    "per_plate_and_per_guest_add_ons": "charged on paying_guests at full price (no child discount, no volume discount).",
+    "per_event_server_box_hour_add_ons": "quantity given by the caller (extra servers, boxes, extra hours).",
+    "bar_setup": "BAR-SETUP-200 for up to 200 paying guests, BAR-SETUP-500 for 201-500; above 500 -> ok=false, needs callback.",
+    "zone4_or_unknown_zone": "travel = null, ok=true, note 'travel quoted by our team' and agent schedules a callback.",
+    "max_guests": "paying_guests > 3000 -> ok=false. Above 1000 the quote is given but the agent also schedules a callback.",
+    "event_year": "event_date in 2027 or later -> add note 'prices may be revised for 2027 bookings'.",
+    "rounding": "all amounts are whole rupees; round half up after each line.",
+    "gst": "never added; every quote returns gst_note 'plus GST at the current rate'."
+  },
+  "zones": [
+    {"zone": 1, "name": "Bengaluru city (BBMP limits)", "travel_charge": 0, "min_guests": null, "min_notice_days": 15},
+    {"zone": 2, "name": "Bengaluru outskirts (up to 40 km)", "travel_charge": 3000, "min_guests": null, "min_notice_days": 15, "examples": ["Devanahalli", "Hoskote", "Anekal", "Nelamangala", "Bidadi"]},
+    {"zone": 3, "name": "Nearby cities", "travel_charge": 8000, "travel_charge_above_500_guests": 5000, "min_guests": 150, "min_notice_days": 20, "examples": ["Mysuru", "Mandya", "Ramanagara", "Tumakuru", "Kolar", "Chikkaballapur"]},
+    {"zone": 4, "name": "Rest of Karnataka", "travel_charge": null, "travel_note": "Quoted per event by the team (schedule a callback)", "min_guests": 150, "min_notice_days": 20, "examples": ["Hassan", "Chikkamagaluru", "Shivamogga", "Davanagere", "Hubballi-Dharwad", "Mangaluru", "Udupi"]}
+  ],
+  "policies": {
+    "min_booking_notice_days": 15,
+    "advance_percent": 40,
+    "balance_due_days_before_event": 3,
+    "tentative_hold_hours": 48,
+    "cancellation_min_days_before_event": 20,
+    "cancellation_charge_percent_of_order": 20,
+    "late_cancellation": "Full advance non-refundable if cancelled less than 20 days before the event",
+    "final_guest_count_days_before_event": 5,
+    "menu_change_cutoff_days_before_event": 7,
+    "on_day_extra_guests_percent": 10,
+    "service_window_hours": 3,
+    "servers_per_guests": 25,
+    "max_guests_per_event": 3000,
+    "max_plates_per_day": 5000,
+    "free_tasting_min_guests": 300,
+    "tasting_fee_small_orders": 1500
+  },
+  "example_quote": {
+    "input": {"package": "SI-BALE", "adults": 600, "children_5_12": 0, "zone": 3, "add_ons": []},
+    "calculation": [
+      "food = 600 x 650 = 390000",
+      "volume discount 5% = -19500",
+      "travel zone 3 above 500 guests = 5000",
+      "subtotal = 375500 (+ GST)"
+    ]
+  }
+}

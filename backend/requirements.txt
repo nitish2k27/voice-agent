@@ -1,0 +1,5 @@
+# Everything for a single-venv dev setup. Split files in requirements/ for leaner installs.
+-r requirements/agent.txt
+-r requirements/api.txt
+-r requirements/ingest.txt
+-r requirements/dev.txt

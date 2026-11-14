@@ -1,0 +1,4 @@
+# Document parsing for the ingest_document task (postcall worker).
+-r base.txt
+pypdf
+python-docx

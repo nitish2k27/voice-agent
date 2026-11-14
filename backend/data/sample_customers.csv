@@ -1,0 +1,13 @@
+customer_id,name,phone,language,campaign,event_type,event_date,venue_area,zone,package,guests,notes
+C001,Ramesh Gowda,9000000001,kn-IN,post_event_feedback,Wedding reception,2026-11-08,Jayanagar,1,SI-BALE,450,Daughter's reception; asked for extra holige
+C002,Priya Sharma,9000000002,en-IN,post_event_feedback,Birthday party,2026-11-09,Koramangala,1,NI-VEG,80,Kid's 10th birthday; live chaat counter added
+C003,Suresh Reddy,9000000003,te-IN,post_event_feedback,Gruhapravesha,2026-11-07,Whitefield,1,SI-CLASSIC,150,Early 6 AM breakfast + lunch
+C004,Anitha Rao,9000000004,kn-IN,post_event_feedback,Naming ceremony,2026-11-10,Malleshwaram,1,SI-CLASSIC,60,Jain menu for 15 guests
+C005,Karthik Iyer,9000000005,ta-IN,post_event_feedback,Office annual day,2026-11-06,Electronic City,1,ROYAL-WED,600,Corporate; asked for invoice copy
+C006,Meera Nair,9000000006,en-IN,enquiry_followup,Engagement,2026-12-20,Mysuru,3,NI-VEG,250,Asked quote on 2026-11-09; comparing two caterers
+C007,Vikram Singh,9000000007,hi-IN,enquiry_followup,Corporate offsite,2026-12-05,Devanahalli,2,JP-CLASSIC,40,Wants Japanese + mocktail bar
+C008,Lakshmi Prasad,9000000008,kn-IN,enquiry_followup,Wedding,2027-01-25,Basavanagudi,1,SI-BALE,900,Wants tasting; muhurtham breakfast too
+C009,Arjun Menon,9000000009,en-IN,enquiry_followup,After-party,2026-12-31,Indiranagar,1,AFTER-PARTY,120,New Year party; asked about bar service
+C010,Kavya Hegde,9000000010,kn-IN,pre_event_confirmation,Upanayana,2026-11-28,Rajajinagar,1,SI-BALE,300,Venue: community hall; confirm access time
+C011,Rahul Verma,9000000011,hi-IN,pre_event_confirmation,Wedding sangeet,2026-11-30,Yelahanka,1,NI-NV,350,Bar setup booked; host has licence
+C012,Deepa Kulkarni,9000000012,kn-IN,pre_event_confirmation,Seemantha,2026-11-29,Tumakuru,3,SI-CLASSIC,180,Zone 3 travel charge applies

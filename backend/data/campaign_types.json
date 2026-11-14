@@ -1,0 +1,107 @@
+{
+  "_comment": "Single source of truth per call type: questions (live prompt + record_answer keys), call_type_block (prompt), extraction_fields (Gemini post-call JSON, English values), sheet_columns (Google Sheet tab order). Columns not in extraction_fields are filled from the calls/customers rows: call_id, phone, call_duration, language.",
+
+  "common": {
+    "owner_summary_fields": {
+      "headline": "string, one line the owner reads first, e.g. 'Happy with food, wants review link; complained about late setup'",
+      "key_points": "array of 2-5 short English strings: only what the owner needs to know",
+      "sentiment": "positive | neutral | negative",
+      "action_items": "array of {what: string, who: 'team' | 'owner', by_when: string | null}",
+      "money_mentioned": "string | null, quote amounts or payment questions exactly as given by tools",
+      "booking_id": "string | null",
+      "urgency": "low | normal | high (high = complaint, event within 7 days, or customer asked for owner)"
+    }
+  },
+
+  "types": {
+    "post_event_feedback": {
+      "label": "Post-event feedback",
+      "when": "1-3 days after the event",
+      "call_type_block": "This is an outbound follow-up 1-3 days after the customer's event. Goal: get honest feedback on food, quantity, service and timing, whether they would book again and recommend us. If they are happy, ask if our team may send a Google review link. If they complain: apologise, note details, schedule a callback with the owner. Never offer refunds or discounts.",
+      "questions": [
+        {"key": "event_confirmed", "text": "Confirm the person and the event (type, day, area)."},
+        {"key": "food_rating", "text": "How was the food overall? (rating 1-5)"},
+        {"key": "quantity_ok", "text": "Was the quantity enough for all guests?"},
+        {"key": "service_rating", "text": "How were our staff and service? (rating 1-5)"},
+        {"key": "on_time", "text": "Was the setup on time?"},
+        {"key": "liked_or_improve", "text": "Any dish guests especially liked, or anything we should improve?"},
+        {"key": "would_rebook", "text": "Would you book us again?"},
+        {"key": "would_refer", "text": "Would you recommend us? If happy, may our team send a Google review link?"}
+      ],
+      "extraction_fields": {
+        "customer_name": "string", "event_date": "YYYY-MM-DD", "event_type": "string", "package": "string",
+        "guests": "integer", "food_rating": "integer 1-5 | null", "quantity_ok": "boolean | null",
+        "service_rating": "integer 1-5 | null", "on_time": "boolean | null", "liked_dishes": "string | null",
+        "improvements": "string | null", "complaint": "boolean", "complaint_details": "string | null",
+        "would_rebook": "boolean | null", "would_refer": "boolean | null", "review_link_requested": "boolean | null",
+        "callback_needed": "boolean", "summary": "string", "language": "string"
+      },
+      "sheet_columns": ["call_id", "customer_name", "phone", "event_date", "event_type", "package", "guests",
+        "food_rating", "quantity_ok", "service_rating", "on_time", "liked_dishes", "improvements", "complaint",
+        "complaint_details", "would_rebook", "would_refer", "review_link_requested", "callback_needed",
+        "summary", "language", "call_duration"]
+    },
+
+    "enquiry_followup": {
+      "label": "Enquiry follow-up",
+      "when": "2-3 days after a quote request that did not book",
+      "call_type_block": "This is an outbound follow-up on a quote the customer asked for. Goal: answer their doubts, recalculate the quote with calculate_quote if guests or package changed, offer a tasting (free for 300+ guests, otherwise Rs 1,500 adjusted in the bill) or a tentative booking. If not interested, politely ask why.",
+      "questions": [
+        {"key": "enquiry_recalled", "text": "Remind them of their enquiry (event type, date, guests)."},
+        {"key": "questions_asked", "text": "Do you have any questions about the menu or the quote?"},
+        {"key": "quote_updated", "text": "If guests or package changed, give an updated quote (tool)."},
+        {"key": "next_step", "text": "Offer a tasting or a tentative booking."},
+        {"key": "reason_not_interested", "text": "If not interested, politely ask why (price, date, another caterer, event cancelled)."}
+      ],
+      "extraction_fields": {
+        "customer_name": "string", "event_type": "string", "event_date": "YYYY-MM-DD | null", "guests": "integer | null",
+        "package_discussed": "string | null", "quote_amount": "number | null", "questions_asked": "string | null",
+        "outcome": "tentative_booking | tasting | thinking | not_interested", "reason_not_interested": "string | null",
+        "callback_needed": "boolean", "summary": "string", "language": "string"
+      },
+      "sheet_columns": ["call_id", "customer_name", "phone", "event_type", "event_date", "guests",
+        "package_discussed", "quote_amount", "questions_asked", "outcome", "reason_not_interested",
+        "callback_needed", "summary", "language", "call_duration"]
+    },
+
+    "pre_event_confirmation": {
+      "label": "Pre-event confirmation",
+      "when": "5-6 days before the event",
+      "call_type_block": "This is an outbound call 5-6 days before the event. Goal: confirm date, serving time, venue address with landmark, final guest count (this is the minimum billed), menu changes (allowed until 7 days before; later changes go to the team as a callback), venue access 4 hours before serving, water and power, and remind that the balance is due 3 days before (the team will share payment details; no payment on this call).",
+      "questions": [
+        {"key": "date_time_confirmed", "text": "Confirm the event date and serving time."},
+        {"key": "venue_address", "text": "Confirm the venue address with a landmark."},
+        {"key": "final_guest_count", "text": "Confirm the final guest count (minimum billed)."},
+        {"key": "menu_changes", "text": "Any menu changes?"},
+        {"key": "access_water_power", "text": "Venue access 4 hours before serving, water and power available?"},
+        {"key": "balance_reminder", "text": "Remind: balance due 3 days before; team will share payment details."}
+      ],
+      "extraction_fields": {
+        "customer_name": "string", "event_date": "YYYY-MM-DD", "serving_time": "string | null",
+        "venue_address": "string | null", "landmark": "string | null", "final_guest_count": "integer | null",
+        "menu_changes": "string | null", "access_time_ok": "boolean | null", "water_power_ok": "boolean | null",
+        "balance_reminder_given": "boolean", "callback_needed": "boolean", "summary": "string", "language": "string"
+      },
+      "sheet_columns": ["call_id", "customer_name", "phone", "event_date", "serving_time", "venue_address",
+        "landmark", "final_guest_count", "menu_changes", "access_time_ok", "water_power_ok",
+        "balance_reminder_given", "callback_needed", "summary", "language", "call_duration"]
+    },
+
+    "inbound": {
+      "label": "Inbound call",
+      "when": "customer calls us",
+      "call_type_block": "The customer called us. Find out what they need (question, quote, availability, booking, complaint) and help. Ask for their name and phone number only when you need them for a booking or callback, and read the phone number back digit by digit. End by repeating the next step.",
+      "questions": [],
+      "extraction_fields": {
+        "caller_name": "string | null", "phone": "string | null",
+        "intent": "question | quote | availability | booking | complaint | other", "event_type": "string | null",
+        "event_date": "YYYY-MM-DD | null", "guests": "integer | null", "area": "string | null",
+        "package_or_menu": "string | null", "quote_amount": "number | null", "tentative_booking_id": "string | null", "payment_link_sent": "boolean",
+        "callback_needed": "boolean", "callback_reason": "string | null", "summary": "string", "language": "string"
+      },
+      "sheet_columns": ["call_id", "caller_name", "phone", "intent", "event_type", "event_date", "guests", "area",
+        "package_or_menu", "quote_amount", "tentative_booking_id", "callback_needed", "callback_reason",
+        "summary", "language", "call_duration"]
+    }
+  }
+}

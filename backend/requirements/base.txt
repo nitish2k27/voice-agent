@@ -1,0 +1,10 @@
+# shared by API, worker, agent (pin versions after the first working install: pip freeze)
+pydantic-settings
+psycopg[binary,pool]
+redis
+httpx
+python-dotenv
+pyyaml
+rapidfuzz            # area name fuzzy matching
+livekit-api          # rooms, dispatch, tokens
+fastembed            # bge-small-en-v1.5 embeddings via ONNX (ingest + query), no torch

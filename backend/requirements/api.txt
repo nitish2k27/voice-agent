@@ -1,0 +1,14 @@
+-r base.txt
+fastapi
+uvicorn[standard]
+python-multipart
+sse-starlette
+supabase             # Storage uploads + auth helpers
+pyjwt[crypto]        # verify Supabase JWT (JWKS)
+celery
+google-genai         # Gemini: extraction + owner summary
+groq                 # judge + simulated caller
+gspread
+google-auth
+google-api-python-client   # Google Calendar API (bookings mirror)
+razorpay                   # payment links (test mode) + webhook signature verification
