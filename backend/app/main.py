@@ -4,7 +4,8 @@ Run from backend/:  uvicorn app.main:app --reload --port 8000   (on Windows: pyt
 """
 from __future__ import annotations
 
-from contextlib import asynccontextmanager
+from contextlib import asynccontextmanager 
+## it basicaly makes preload of data before the fastapi is live and clears the data or ask afeter the fastapi goes off basicaly
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -20,6 +21,7 @@ setup_logging()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    #basically we can see here usage of contex manager the open_asyn_pool loads the polling and stpos at yield basically so that whren fatapi run the next funtion will run from there
     await open_async_pool()
     yield
     await close_async_pool()

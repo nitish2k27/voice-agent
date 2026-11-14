@@ -9,7 +9,7 @@ from functools import lru_cache
 from typing import Any
 
 import jwt
-from jwt import PyJWKClient
+from jwt import PyJWKClient #for supabse login it just cehcks the the jwt with the public key and verfiyes the autheneication
 
 from app.core.config import settings
 

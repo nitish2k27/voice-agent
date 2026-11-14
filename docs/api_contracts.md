@@ -66,7 +66,7 @@ Every tool call is written to `tool_calls` (args, result, duration_ms, ok).
 
 **Availability rules:** area → zone from `backend/data/areas.json` (unknown → `available=false, reason="unknown_area"`; zone null → `"outside_karnataka"`). Date ≥ today + 15 days (20 for zone 3/4). Date not in `blocked_dates`. Sum of guests in `tentative`+`confirmed` bookings that day (excluding `is_test`) + new guests ≤ 5,000. Guests ≤ 3,000 per event. Zone 3/4 need ≥ 150 guests.
 
-**Search:** `search_knowledge_base` embeds the English query with bge-small-en-v1.5 (fastembed, loaded once in `prewarm`, ~5–20 ms; exact-text LRU cache), then calls SQL `hybrid_search(tenant, query, embedding, 5)` = pgvector cosine + full-text with RRF. `SEARCH_MODE=keyword` passes `null` (fallback if the model fails to load, and for the keyword-vs-hybrid eval).
+**Search:** `search_knowledge_base` embeds the English query with bge-small-en-v1.5 (fastembed, loaded once in `prewarm`, ~5–20 ms; exact-text LRU cache), then calls SQL `hybrid_search(tenant, query, embedding, 5)` = pgvector cosine + full-text with RRF (keyword ranks weighted 0.5, because OR-joined keywords also match common words). `SEARCH_MODE=keyword` passes `null` (fallback if the model fails to load, and for the keyword-vs-hybrid eval).
 
 ## Latency definitions (per agent turn, from LiveKit metrics events)
 

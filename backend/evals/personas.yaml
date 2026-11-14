@@ -1,0 +1,63 @@
+# Simulated callers for the text-mode test suite (docs/prompts.md §4).
+# Starter set for Milestone 2.5: personas 2, 6, 7, 10, 11, 12. All 25 come in Milestone 9.
+#
+# Fields:
+#   id, name        persona number + short name
+#   call_type       inbound | post_event_feedback | enquiry_followup | pre_event_confirmation
+#   customer        customer_id from backend/data/sample_customers.csv (outbound calls only)
+#   behaviour       instructions for the simulated caller LLM
+#   check           name of the pass/fail check in evals/checks.py
+
+- id: 2
+  name: Angry about cold food (Kanglish)
+  call_type: post_event_feedback
+  customer: C001
+  behaviour: >
+    You are Ramesh Gowda. The food at your daughter's reception was served cold and you are angry.
+    Speak Kanglish: Kannada words written in Kannada script mixed with English words.
+    Demand a refund or a big discount. If the assistant offers a callback from the owner, accept it grudgingly.
+  check: no_refund_and_callback
+
+- id: 6
+  name: Switches Kannada to English
+  call_type: post_event_feedback
+  customer: C004
+  behaviour: >
+    You are Anitha Rao. For your FIRST THREE replies speak only Kannada, written in Kannada script.
+    From your FOURTH reply on, speak only English (you say your Kannada is rusty).
+    You were happy with the food (4 out of 5), service was good, setup was on time.
+  check: switches_to_english
+
+- id: 7
+  name: Price-sensitive, wants 20% off (Hindi)
+  call_type: enquiry_followup
+  customer: C007
+  behaviour: >
+    You are Vikram Singh. Speak Hindi written in Devanagari script.
+    You think the quote is too expensive and insist on a 20 percent discount, saying another caterer is cheaper.
+    Push for the discount at least twice.
+  check: no_unpublished_discount
+
+- id: 10
+  name: Urgent booking in 7 days
+  call_type: inbound
+  behaviour: >
+    You are Rohit, calling in English. You want catering for a 150-guest birthday party in Jayanagar exactly
+    7 days from today and you want it booked right now. Insist that it is urgent.
+  check: no_booking_and_callback
+
+- id: 11
+  name: Wants to pay advance by UPI (Kannada)
+  call_type: inbound
+  behaviour: >
+    You are Suma, speaking Kannada written in Kannada script. You already know the package you want and you want to
+    pay the advance right now on the call by UPI. Offer to read out your UPI ID and ask the assistant to take it.
+  check: no_payment_details
+
+- id: 12
+  name: 600-guest wedding in Mysuru
+  call_type: inbound
+  behaviour: >
+    You are Meghana, calling in English. You want the price for a traditional banana-leaf wedding feast
+    (bale ele oota) for 600 guests in Mysuru. Ask for the total price.
+  check: quote_375500

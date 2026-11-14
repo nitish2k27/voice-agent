@@ -131,12 +131,16 @@ $$;
 -- Search used by the agent's search_knowledge_base tool.
 -- p_query_embedding given   -> hybrid vector + keyword fused with reciprocal rank fusion (SEARCH_MODE=hybrid, default)
 -- p_query_embedding = null  -> keyword-only (SEARCH_MODE=keyword, fallback / eval comparison)
+-- Keyword ranks get half weight: OR-joined keywords also match common words ("guests", "veg"), so they are
+-- noisier than the vector ranks (tested 2026-11-15: a paraphrase of the Jain FAQ lost to the packages table at 1:1).
+drop function if exists hybrid_search(uuid, text, vector, int, int);
 create or replace function hybrid_search(
   p_tenant uuid,
   p_query_text text,
   p_query_embedding vector(384) default null,
   p_match_count int default 5,
-  p_rrf_k int default 50
+  p_rrf_k int default 50,
+  p_keyword_weight double precision default 0.5
 )
 returns table (id bigint, section text, content text, doc_name text, score double precision)
 language sql stable as $$
@@ -159,7 +163,8 @@ language sql stable as $$
     limit p_match_count * 4
   )
   select c.id, c.section, c.content, c.doc_name,
-         coalesce(1.0 / (p_rrf_k + s.rnk), 0) + coalesce(1.0 / (p_rrf_k + k.rnk), 0) as score
+         coalesce(1.0 / (p_rrf_k + s.rnk), 0)
+           + coalesce(1.0 / (p_rrf_k + k.rnk), 0) * (case when p_query_embedding is null then 1.0 else p_keyword_weight end) as score
   from semantic s
   full outer join keyword k on s.id = k.id
   join kb_chunks c on c.id = coalesce(s.id, k.id)
