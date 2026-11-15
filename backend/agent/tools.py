@@ -35,6 +35,10 @@ class CallState:
     session_id: str = ""                # random id per call, for Sarvam prompt caching
     call_id: str | None = None          # the calls table row (created in Milestone 4; None until then)
     customer_id: str | None = None
+    last_customer_text: str = ""        # the customer's last sentence (end_call safety check)
+    turn_count: int = 0                 # messages so far (call_logger keeps it up to date)
+    ended_by: str | None = None         # agent | silence | max_duration ... (set by end_call / guardrails)
+    asked_before_ending: bool = False   # end_call refused once already -> next one is allowed
     answers: dict = field(default_factory=dict)    # question_key -> answer (English)
     tool_log: list = field(default_factory=list)   # saved to the tool_calls table in Milestone 4
 
@@ -52,7 +56,8 @@ def say_filler(context, key):
 
 def remember(state, name, args, started, result, ok=True):
     ms = int((time.time() - started) * 1000)
-    state.tool_log.append({"name": name, "args": args, "result": result, "duration_ms": ms, "ok": ok})
+    state.tool_log.append({"name": name, "args": args, "result": result, "duration_ms": ms, "ok": ok,
+                           "turn_index": state.turn_count})
     log.info("TOOL %s %s -> %s (%d ms)", name, json.dumps(args, ensure_ascii=False), str(result)[:160], ms)
 
 
@@ -226,13 +231,45 @@ async def end_call(context: RunContext, reason: str) -> str:
         reason: short English reason, e.g. "customer said goodbye"
     """
     state, started = context.userdata, time.time()
+
+    # Safety net (console test 2026-11-15: "ಏನಿಲ್ಲಮ್ಮ" was taken as goodbye and the call was cut).
+    # If the customer's last words weren't clearly a goodbye, refuse ONCE and make the agent ask first.
+    said_bye = any(word in state.last_customer_text.lower() for word in GOODBYE_WORDS)
+    if not said_bye and not state.asked_before_ending:
+        state.asked_before_ending = True
+        result = ("Not ended: the customer did not clearly say goodbye. Ask if there is anything else you can "
+                  "help with, and end only after they say goodbye.")
+        remember(state, "end_call", {"reason": reason}, started, result, ok=False)
+        return result
+
     remember(state, "end_call", {"reason": reason}, started, "ending")
+    state.ended_by = "agent"
     context.session.shutdown(drain=True)   # let the goodbye finish playing, then close
     return "Call ended."
 
 
+GOODBYE_WORDS = ["bye", "thank", "that's all", "thats all", "nothing else", "no more",
+                 "ಧನ್ಯವಾದ", "ಬೈ", "ಸಾಕು", "धन्यवाद", "शुक्रिया", "बाय", "बस", "நன்றி", "போதும்", "ధన్యవాదాలు", "చాలు"]
+
+
+@function_tool
+async def switch_language(context: RunContext, language: Literal["kn-IN", "en-IN", "hi-IN", "ta-IN", "te-IN"]) -> str:
+    """Call when the customer ASKS you to speak a particular language (e.g. "please talk in Kannada").
+
+    Args:
+        language: kn-IN Kannada, en-IN English, hi-IN Hindi, ta-IN Tamil, te-IN Telugu
+    """
+    state, started = context.userdata, time.time()
+    agent = context.session.current_agent
+    new_language = agent.switcher.force(language)
+    await agent.apply_language(new_language, "asked")
+    result = f"Switched. Reply in {prompts.LANGUAGE_NAMES.get(new_language, new_language)} from now on."
+    remember(state, "switch_language", {"language": language}, started, result)
+    return result
+
+
 ALL_TOOLS = [search_knowledge_base, calculate_quote, check_availability, create_tentative_booking,
-             schedule_callback, record_answer, end_call]
+             schedule_callback, record_answer, switch_language, end_call]
 
 
 def enabled_tools(config):

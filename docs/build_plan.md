@@ -95,7 +95,7 @@ Global rules that apply to every milestone:
 ## Milestone 3 — Mid-call language switching
 
 **Tasks:** `backend/agent/language.py`:
-- Hysteresis on STT finals: switch CURRENT LANGUAGE after 2 consecutive final utterances (≥3 words) in the same new language → rebuild the prompt tail → `update_instructions`.
+- Hysteresis on STT finals: switch CURRENT LANGUAGE after 1 full sentence (≥3 words) in an Indian language, or 2 in a row into English → rebuild the prompt tail → `update_instructions` (+ language note). `switch_language` tool for explicit requests. (Changed from "2 for every language" after the 2026-11-15 voice test.)
 - `tts_node` override: detect the script of each LLM reply (Kannada / Devanagari / Tamil / Telugu / Latin) → `tts.update_options(target_language_code, speaker)` before synthesis. Latin with a Hindi or Kannada session → keep that language's voice (code-mix).
 - `VOICES` map per language with real Bulbul v4 Flash speaker IDs from Sarvam docs (same persona feel where possible); unsupported language (ml, or) → fall back to en-IN.
 - Pass the current language to tools for filler phrases.

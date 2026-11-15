@@ -88,7 +88,7 @@ Repo = `backend/` (all Python) + `frontend/` (React JS) + `supabase/` (schema) +
 ### 2. Inbound call (v1)
 1. Customer opens "Call us" link / QR → presses Call (rate limited per IP; max 2 at once).
 2. FastAPI creates room `in-{uuid}`, dispatches the agent with tenant config, returns a token.
-3. Agent greets (AI + transcription disclosure), asks Kannada or English, then follows the caller's language.
+3. Agent greets (AI + written-record disclosure) and asks which language the caller is comfortable with (Kannada, English, Hindi, Tamil, Telugu); the answer sets the language (`switch_language`), and it still follows the caller if they switch later.
 4. Answers from documents, quotes, checks dates, reserves dates (calendar + payment link), callbacks.
 5. Same logging + `postcall`.
 

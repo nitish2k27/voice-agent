@@ -18,6 +18,8 @@ sys.stdout.reconfigure(encoding="utf-8")  # Kannada/Hindi text in the Windows co
 from livekit.agents import AgentSession  # noqa: E402
 
 from agent.agent import Amrutha, load_config, make_llm, new_call_state, sample_customer  # noqa: E402
+from agent.call_logger import CallLogger  # noqa: E402
+from agent.language import script_language  # noqa: E402
 from app.core.config import settings  # noqa: E402
 
 
@@ -42,8 +44,14 @@ async def main():
     meta = {"tenant_id": settings.TENANT_ID, "call_type": args.call_type, "customer": customer, "is_test": True}
     state = new_call_state(meta, await asyncio.to_thread(load_config, settings.TENANT_ID))
 
+    logger = CallLogger(state, room_name="text-chat")   # saves the chat like a real call (is_test=true)
+    await logger.start()
+    logger.mark_answered()
+
     async with AgentSession(userdata=state, llm=make_llm(state.session_id)) as session:
-        await session.start(Amrutha(state))
+        session.on("conversation_item_added", logger.on_item)
+        agent = Amrutha(state)
+        await session.start(agent)
 
         messages = args.messages
         interactive = not messages
@@ -57,10 +65,16 @@ async def main():
                     break
                 text = messages.pop(0)
                 print(f"\nYOU: {text}")
+            await agent.on_customer_sentence(script_language(text), text)   # same path as a spoken sentence
             result = await session.run(user_input=text)
             print_events(result)
+            if state.ended_by:          # the agent called end_call
+                break
 
-    print(f"\nanswers saved: {state.answers}")
+        await logger.finish(session.usage, ended_by=state.ended_by or "customer", has_audio=False)
+
+    print(f"\ncall saved: {state.call_id}")
+    print(f"answers saved: {state.answers}")
     print(f"pending questions left: {[q['key'] for q in state.pending_questions]}")
 
 

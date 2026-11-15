@@ -48,9 +48,22 @@ def test_unsupported_language_falls_back_to_english():
 def test_kannada_to_english_to_hindi():
     s = LanguageSwitcher("kn-IN")
     s.observe("en-IN", "I want to know the price")
-    assert s.observe("en-IN", "for a wedding next month") == "en-IN"
-    s.observe("hi-IN", "मुझे जैन खाना भी चाहिए")
-    assert s.observe("hi-IN", "चालीस लोगों के लिए होगा") == "hi-IN"
+    assert s.observe("en-IN", "for a wedding next month") == "en-IN"      # into English: 2 sentences
+    assert s.observe("hi-IN", "मुझे जैन खाना भी चाहिए") == "hi-IN"           # into Hindi: 1 full sentence
+
+
+def test_one_kannada_sentence_switches_from_english():
+    # console test 2026-11-15: STT misheard the first sentence as English, then the caller spoke Kannada
+    s = LanguageSwitcher(None)
+    assert s.observe("en-IN", "And we are me") == "en-IN"
+    assert s.observe("kn-IN", "ನಾಳೆ ನಮ್ಮ ಮನೆಯಲ್ಲಿ ಫಂಕ್ಷನ್ ಇದೆ") == "kn-IN"
+    assert s.observe("kn-IN", "ಏನಿಲ್ಲಮ್ಮ") is None                         # one word: ignored
+
+
+def test_force_language():
+    s = LanguageSwitcher("en-IN")
+    assert s.force("kn-IN") == "kn-IN" and s.current == "kn-IN"
+    assert s.force("ml-IN") == "en-IN"                                    # no Malayalam voice
 
 
 def test_voice_follows_reply_script():

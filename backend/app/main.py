@@ -13,7 +13,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
 from app.core.logging import setup_logging
 from app.db.session import close_async_pool, get_async_conn, open_async_pool
-from app.routers import me
+from app.routers import customer, inbound, me
 from app.schemas.common import HealthOut
 
 setup_logging()
@@ -38,6 +38,8 @@ app.add_middleware(
 )
 
 app.include_router(me.router)
+app.include_router(inbound.router)
+app.include_router(customer.router)
 
 
 @app.get("/health", response_model=HealthOut, tags=["health"])

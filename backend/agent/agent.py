@@ -27,6 +27,8 @@ from livekit.agents import Agent, AgentServer, AgentSession, JobContext, cli  # 
 from livekit.plugins import sarvam  # noqa: E402
 
 from agent import prompts  # noqa: E402
+from agent.call_logger import CallLogger  # noqa: E402
+from agent.guardrails import Guardrails  # noqa: E402
 from agent.language import LanguageSwitcher, voice_language_for_reply  # noqa: E402
 from agent.tools import CallState, enabled_tools  # noqa: E402
 from app.db.session import get_sync_conn  # noqa: E402
@@ -105,26 +107,33 @@ class Amrutha(Agent):
 
     async def on_enter(self):
         # fixed opening line, so the AI + transcription disclosure is always said first
-        self.session.say(prompts.opening_line(self.state.direction, self.state.config))
+        self.session.say(prompts.opening_line(self.state.direction, self.state.config, self.state.customer.get("language")))
 
     async def on_customer_sentence(self, lang, text):
         """Every final customer sentence comes here (from STT in calls, from the text in evals)."""
         if lang:
             self.state.last_heard_language = lang
+        self.state.last_customer_text = text
         new_language = self.switcher.observe(lang, text)
-        if new_language and new_language != self.state.current_language:
-            log.info("LANGUAGE switch %s -> %s", self.state.current_language, new_language)
-            self.state.current_language = new_language
-            await self.update_instructions(self.state.build_prompt())   # CURRENT LANGUAGE in the prompt
+        if new_language:
+            await self.apply_language(new_language, "heard")
 
-            # The prompt's language rule sits far up at the top; a short note near the end of the
-            # conversation is followed much more reliably on the very next reply.
-            name = prompts.LANGUAGE_NAMES.get(new_language, new_language)
-            chat = self.chat_ctx.copy()
-            only = "plain English, no Indian-language words or script" if new_language == "en-IN" else name
-            chat.add_message(role="system", content=f"Language note: the customer is now speaking {name}. "
-                                                    f"Reply only in {only} from now on.")
-            await self.update_chat_ctx(chat)
+    async def apply_language(self, new_language, why):
+        """Switch the reply language: from speech ("heard") or because the customer asked ("asked")."""
+        if new_language == self.state.current_language:
+            return
+        log.info("LANGUAGE switch %s -> %s (%s)", self.state.current_language, new_language, why)
+        self.state.current_language = new_language
+        await self.update_instructions(self.state.build_prompt())   # CURRENT LANGUAGE in the prompt
+
+        # The prompt's language rule sits far up at the top; a short note near the end of the
+        # conversation is followed much more reliably on the very next reply.
+        name = prompts.LANGUAGE_NAMES.get(new_language, new_language)
+        chat = self.chat_ctx.copy()
+        only = "plain English, no Indian-language words or script" if new_language == "en-IN" else name
+        chat.add_message(role="system", content=f"Language note: the customer is now speaking {name}. "
+                                                f"Reply only in {only} from now on.")
+        await self.update_chat_ctx(chat)
 
     async def stt_node(self, audio, model_settings):
         # pass Sarvam's transcripts through; each final sentence feeds the language switcher
@@ -193,23 +202,12 @@ def make_tts(state):
     )
 
 
-# ---------------------------------------------------------------- latency print
-def print_latency(event, last_user):
-    msg = event.item
-    role = getattr(msg, "role", None)
-    m = getattr(msg, "metrics", None) or {}
-    if role == "user":
-        last_user["eou"] = m.get("end_of_turn_delay")
-        return
-    if role == "assistant":
-        def ms(x):
-            return f"{x * 1000:.0f}ms" if x is not None else "-"
-        log.info("LATENCY | total=%s | end-of-turn=%s llm_first_token=%s tts_first_audio=%s",
-                 ms(m.get("e2e_latency")), ms(last_user.get("eou")), ms(m.get("llm_node_ttft")), ms(m.get("tts_node_ttfb")))
-
-
 # ---------------------------------------------------------------- entrypoint
 server = AgentServer()
+
+# why the LiveKit session closed -> calls.ended_by (when no guardrail or end_call set it first)
+CLOSE_REASON_TO_ENDED_BY = {"participant_disconnected": "customer", "error": "error",
+                            "user_initiated": "agent", "job_shutdown": "customer"}
 
 
 @server.rtc_session(agent_name=settings.AGENT_NAME)
@@ -217,9 +215,37 @@ async def entrypoint(ctx: JobContext):
     meta = read_job_metadata(ctx)
     config = await asyncio.to_thread(load_config, meta.get("tenant_id") or settings.TENANT_ID)
     state = new_call_state(meta, config)
-    log.info("New %s call %s | customer=%s | questions=%d | language=%s",
-             state.call_type, state.session_id, state.customer.get("name", "-"), len(state.pending_questions), state.current_language)
+    log.info("New %s call | customer=%s | questions=%d | language=%s",
+             state.call_type, state.customer.get("name", "-"), len(state.pending_questions), state.current_language)
 
+    # 1. calls row first, so bookings/callbacks made during the call can point to it
+    logger = CallLogger(state, ctx.room.name, job_id=meta.get("job_id"))
+    await logger.start()
+
+    # Save the call however the job ends: Ctrl+C, crash, or the room closing while we're still waiting
+    # (e.g. the customer declined). Registered here, BEFORE waiting, so nothing is left half-written.
+    current = {"session": None}
+
+    async def save_on_shutdown():
+        usage = current["session"].usage if current["session"] else None
+        await logger.finish(usage)
+
+    ctx.add_shutdown_callback(save_on_shutdown)
+
+    # 2. real rooms: wait for the customer before saying anything (console mode: you're already there).
+    #    Outbound: they must accept on their call page in time. Inbound: their browser joins a moment after the agent.
+    if not ctx.is_fake_job():
+        wait = settings.WAIT_FOR_PARTICIPANT_SECONDS if state.direction == "outbound" else 30
+        try:
+            await asyncio.wait_for(ctx.wait_for_participant(), timeout=wait)
+        except asyncio.TimeoutError:
+            log.info("customer didn't join within %ss", wait)
+            await logger.finish(outcome="no_answer", ended_by="timeout")
+            await ctx.delete_room()
+            return
+    logger.mark_answered()
+
+    # 3. the voice session
     session = AgentSession(
         userdata=state,                  # tools read the call state from context.userdata
         stt=make_stt(),
@@ -227,13 +253,31 @@ async def entrypoint(ctx: JobContext):
         tts=make_tts(state),
         vad=None,                        # Sarvam STT does voice detection itself
         turn_handling={"turn_detection": "stt", "endpointing": {"min_delay": 0.07}},
+        user_away_timeout=config.get("silence_timeout_seconds") or 20,   # "away" event -> guardrails
     )
+    current["session"] = session
+    session.on("conversation_item_added", logger.on_item)
 
-    last_user = {}
-    session.on("conversation_item_added", lambda ev: print_latency(ev, last_user))
-    session.on("close", lambda ev: log.info("Call ended | answers=%s | tools used=%d", state.answers, len(state.tool_log)))
+    guard = Guardrails(session, state, config.get("max_call_seconds") or 480, config.get("silence_timeout_seconds") or 20)
+
+    # 4. when the call ends (any reason): save everything, delete the room, end the job
+    async def wrap_up(outcome=None, ended_by=None):
+        guard.stop()
+        await logger.finish(session.usage, outcome, ended_by)
+        await ctx.delete_room()          # does nothing in console mode
+        ctx.shutdown("call ended")
+
+    def on_close(event):
+        reason = getattr(event.reason, "value", str(event.reason))
+        ended_by = state.ended_by or CLOSE_REASON_TO_ENDED_BY.get(reason, "customer")
+        outcome = "error" if event.error else None
+        log.info("session closed (%s) | answers=%s | tools used=%d", reason, state.answers, len(state.tool_log))
+        asyncio.create_task(wrap_up(outcome, ended_by))
+
+    session.on("close", on_close)
 
     await session.start(agent=Amrutha(state), room=ctx.room)
+    guard.start()
 
 
 if __name__ == "__main__":

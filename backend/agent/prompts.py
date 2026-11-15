@@ -32,11 +32,20 @@ DEFAULT_FILLERS = {
     },
 }
 
+# The opening always: (1) says it's an AI, (2) says we keep a written record, (3) asks which language.
+# (Old text "This call is transcribed for quality. Kannada or English..." sounded like
+#  "I can transcribe in Kannada" in the 2026-11-15 voice test.)
 OPENINGS = {
-    "outbound": "Namaskara, I'm {persona}, an AI assistant calling from {business}. "
-                "This call is transcribed for quality. Is this a good time to talk for two minutes?",
-    "inbound": "Namaskara, {business}, I'm {persona}, an AI assistant. "
-               "This call is transcribed for quality. Kannada or English, how can I help you?",
+    "inbound": "Namaskara! I'm {persona}, the AI assistant of {business}. "
+               "We keep a written record of this call for quality. "
+               "Which language are you comfortable with: Kannada, English, Hindi, Tamil or Telugu?",
+    "outbound": "Namaskara! I'm {persona}, an AI assistant calling from {business}. "
+                "We keep a written record of this call for quality. "
+                "Is this a good time to talk for two minutes? Which language are you comfortable with?",
+    "outbound_known_language": "Namaskara! I'm {persona}, an AI assistant calling from {business}. "
+                               "We keep a written record of this call for quality. "
+                               "Is this a good time to talk for two minutes? Shall we talk in {language}, "
+                               "or is another language better for you?",
 }
 
 
@@ -104,12 +113,17 @@ def language_text(current_language):
             f"turns of this call were in another language. Mixing in English words is fine.")
 
 
-def opening_line(direction, config=None):
+def opening_line(direction, config=None, known_language=None):
+    """known_language = the customer's language from the CSV (outbound), so we can offer it first."""
     config = config or {}
     custom = config.get("greeting_outbound" if direction == "outbound" else "greeting_inbound")
     if custom:
         return custom
-    return OPENINGS[direction].format(persona=config.get("persona_name") or "Amrutha", business="Amrith Sagar Catering")
+    key = direction
+    if direction == "outbound" and known_language in LANGUAGE_NAMES:
+        key = "outbound_known_language"
+    return OPENINGS[key].format(persona=config.get("persona_name") or "Amrutha", business="Amrith Sagar Catering",
+                                language=LANGUAGE_NAMES.get(known_language, ""))
 
 
 def filler(key, language, config=None):

@@ -23,8 +23,13 @@ SCRIPT_RANGES = [
     (0x0A80, 0x0AFF, "gu-IN"),   # Gujarati
 ]
 
-SWITCH_AFTER = 2      # sentences in a row
-MIN_WORDS = 3         # shorter sentences ("ok", "yes please") don't count
+# How many sentences in a row (3+ words each) before we switch:
+#  - INTO English: 2, because Indian callers drop English words and short English phrases all the time.
+#  - INTO an Indian language: 1. A full sentence that STT writes in Kannada/Hindi/... script is a strong sign,
+#    and making a Kannada speaker wait for an English answer felt wrong in the console test (2026-11-15).
+SWITCH_AFTER_TO_ENGLISH = 2
+SWITCH_AFTER_TO_INDIAN = 1
+MIN_WORDS = 3         # shorter sentences ("ok", "yes please", "ಏನಿಲ್ಲಮ್ಮ") don't count
 
 
 def script_language(text):
@@ -74,10 +79,16 @@ class LanguageSwitcher:
             self.count += 1
         else:
             self.candidate, self.count = lang, 1
-        if self.count >= SWITCH_AFTER:
+        needed = SWITCH_AFTER_TO_ENGLISH if lang == "en-IN" else SWITCH_AFTER_TO_INDIAN
+        if self.count >= needed:
             self.current, self.candidate, self.count = lang, None, 0
             return lang
         return None
+
+    def force(self, lang):
+        """The customer asked for a language ("please speak Kannada"): switch right away."""
+        self.current, self.candidate, self.count = speakable(lang), None, 0
+        return self.current
 
 
 def voice_language_for_reply(reply_text, current_language):

@@ -67,7 +67,7 @@ create table if not exists agent_configs (
   voices jsonb not null default '{}'::jsonb,         -- {"kn-IN": "<bulbul v4 flash speaker id>", ...}
   fillers jsonb not null default '{}'::jsonb,        -- {"check": {"en-IN": "...", "kn-IN": "..."}, "quote": {...}}
   tools_enabled text[] default array['search_knowledge_base','calculate_quote','check_availability',
-                                     'create_tentative_booking','schedule_callback','record_answer','end_call'],
+                                     'create_tentative_booking','schedule_callback','record_answer','switch_language','end_call'],
   prompt_version text not null default 'v1',
   max_call_seconds int not null default 480,          -- polite wrap-up, then hang up
   silence_timeout_seconds int not null default 20,

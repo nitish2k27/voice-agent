@@ -83,7 +83,7 @@ Every tool call is written to `tool_calls` (args, result, duration_ms, ok).
 | Method | Path | Body / Notes | Response |
 |---|---|---|---|
 | POST | `/inbound/start` | `{}` (optional `{name, phone}`). **Rate limited:** 3 per IP per 10 min, max 2 concurrent inbound calls (Redis counters) | `{room, token, livekit_url}` or 429 |
-| GET | `/customer/{token}/events` | SSE. On connect, first sends the **current state** (`ringing {room, business_name, seconds_left}` / `idle` / `missed`), then live events `ring`, `cancel` | — |
+| GET | `/customer/{token}/events` | SSE (v1: built from the `call_jobs` row, checked once a second, so it works without Redis; the DB is the source of truth). On connect, first sends the **current state** (`ringing {room, business_name, seconds_left}` / `idle` / `missed`), then live events `ring`, `cancel` | — |
 | POST | `/customer/{token}/join` | accept the ringing call (only while job is `ringing`) | `{room, token, livekit_url}` |
 | POST | `/customer/{token}/decline` | decline | `{ok}` |
 

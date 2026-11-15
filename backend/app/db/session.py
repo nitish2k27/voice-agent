@@ -16,7 +16,8 @@ from psycopg_pool import AsyncConnectionPool, ConnectionPool
 
 from app.core.config import settings
 
-_CONN_KWARGS = {"prepare_threshold": None, "row_factory": dict_row}
+# connect_timeout: home networks can take 10+ s to reach Supabase now and then
+_CONN_KWARGS = {"prepare_threshold": None, "row_factory": dict_row, "connect_timeout": 20}
 
 _async_pool: AsyncConnectionPool | None = None
 _sync_pool: ConnectionPool | None = None
@@ -30,7 +31,7 @@ async def open_async_pool(min_size: int = 1, max_size: int = 5) -> AsyncConnecti
             settings.DATABASE_URL, min_size=min_size, max_size=max_size,
             kwargs=_CONN_KWARGS, open=False, name="async-pool",
         )
-        await _async_pool.open(wait=True, timeout=15)
+        await _async_pool.open(wait=True, timeout=30)
     return _async_pool
 
 
@@ -56,7 +57,7 @@ def open_sync_pool(min_size: int = 1, max_size: int = 4) -> ConnectionPool:
             settings.DATABASE_URL, min_size=min_size, max_size=max_size,
             kwargs=_CONN_KWARGS, open=False, name="sync-pool",
         )
-        _sync_pool.open(wait=True, timeout=15)
+        _sync_pool.open(wait=True, timeout=30)
     return _sync_pool
 
 

@@ -38,15 +38,21 @@ CALLER_RULES = (
 
 
 def groq_chat(model, messages, max_tokens=300):
-    """One chat call to Groq (OpenAI-compatible). Retries a few times on rate limits."""
+    """One chat call to Groq (OpenAI-compatible). Retries on rate limits and on network hiccups."""
+    last_error = ""
     for attempt in range(5):
-        r = httpx.post(
-            "https://api.groq.com/openai/v1/chat/completions",
-            headers={"Authorization": f"Bearer {settings.GROQ_API_KEY}"},
-            json={"model": model, "messages": messages, "max_tokens": max_tokens, "temperature": 0.7,
-                  "reasoning_effort": "low"},
-            timeout=60,
-        )
+        try:
+            r = httpx.post(
+                "https://api.groq.com/openai/v1/chat/completions",
+                headers={"Authorization": f"Bearer {settings.GROQ_API_KEY}"},
+                json={"model": model, "messages": messages, "max_tokens": max_tokens, "temperature": 0.7,
+                      "reasoning_effort": "low"},
+                timeout=60,
+            )
+        except httpx.TransportError as e:   # DNS failure, connect timeout, dropped connection
+            last_error = f"network: {type(e).__name__}"
+            time.sleep(5 * (attempt + 1))
+            continue
         if r.status_code == 429 or r.status_code == 400 or r.status_code >= 500:
             # 429 = rate limit; 400/5xx happen now and then on the free tier, a retry usually works
             last_error = f"HTTP {r.status_code}: {r.text[:200]}"
@@ -84,7 +90,7 @@ async def run_persona(persona, config, prompt_version, max_turns):
     state = new_call_state(meta, config)
     agent = Amrutha(state)
 
-    opening = prompts.opening_line(state.direction, config)
+    opening = prompts.opening_line(state.direction, config, customer.get("language"))
     turns = []
     async with AgentSession(userdata=state, llm=make_llm(state.session_id)) as session:
         await session.start(agent)
